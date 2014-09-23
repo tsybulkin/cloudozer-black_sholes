@@ -3,19 +3,24 @@
 %
 
 -module(iv).
--export([test/0]).
+-export([test/1,iv/1]).
 
 -define(VOL_GUESS_MIN, 0.05).
 -define(VOL_GUESS_MAX, 2.5).
 -define(MAX_ITER, 100).
 -define(VOL_TOL, 0.001).
 
-x() -> {0.5,100.0, 1.0, 1.0, 0.01, 0, 0, option_call,100.0}.
+x() -> {100.0, 1.0, 1.0, 0.01, 0, 0, option_call,100.0}.
 
-test() ->
-	{Vol,Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike} = x(),
-	io:format("Correct volatility: ~p~n",[Vol]),
-	{Opt,_,_,_,_,_,_,_} = black_sholes:blash(Vol,Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike),
+iv(Opt) ->
+	{Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike} = x(),
+	implicit_vol(Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike,Opt).
+	
+
+test(V) ->
+	{Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike} = x(),
+	io:format("Correct volatility: ~p~n",[V]),
+	{Opt,_,_,_,_,_,_,_} = black_sholes:blash(V,Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike),
 	IV = implicit_vol(Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike,Opt),
 	io:format("Implicit volatility: ~p~n",[IV]).
 
@@ -50,7 +55,7 @@ bisect(Iter, A,B, Func) ->
 		Fc < -?VOL_TOL ->
 			bisect(Iter+1, C, B, Func);
 		true ->
-			io:format("Found in ~p iterations~n",[Iter]),
+			%io:format("Found in ~p iterations~n",[Iter]),
 			C  
 	end.
 
@@ -70,7 +75,7 @@ secant(Iter, A,B, Func) ->
 		Fc < -?VOL_TOL ->
 			secant(Iter+1, C, B, Func);
 		true ->
-			io:format("Found in ~p iterations~n",[Iter]),
+			%io:format("Found in ~p iterations~n",[Iter]),
 			C  
 	end.
 

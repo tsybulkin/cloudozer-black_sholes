@@ -3,13 +3,25 @@
 %
 
 -module(black_sholes).
--export([blash/9,test_bs/0]).
+-export([blash/9,test_bs/1,measuring/1]).
 
 -define(INV_SQRTPI, 1/math:sqrt(math:pi())).
 
 
 
-test_bs() -> blash(0.5,100.0, 1.0, 1.0, 0.01, 0, 0, option_call,100.0).
+test_bs(V) -> blash(V,100.0, 1.0, 1.0, 0.01, 0, 0, option_call,100.0).
+
+measuring(N)->
+    statistics(runtime),
+    test_bs(0.5),
+    measuring(N-1,N).
+
+measuring(0,N) ->
+    {_,T} = statistics(runtime),
+    io:format("~w runs of Black-Sholes algo took: ~p sec~n",[N, T/1000]);
+measuring(K,N) -> 
+    test_bs(0.5),
+    measuring(K-1,N).  
 
 
 blash(Vol,_,_,_,_,_,_,_,Strike) when Vol=<0; Strike=<0 -> bad_input; 
