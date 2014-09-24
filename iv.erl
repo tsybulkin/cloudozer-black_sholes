@@ -27,8 +27,7 @@ test(V) ->
 
 implicit_vol(Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike,Option) ->
 	Func = fun(V)->
-		{Opt,_,_,_,_,_,_,_} = black_sholes:blash(V,Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike),
-		Opt - Option
+		black_sholes:blash_iv(V,Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike) -Option
 	end,
 
 	A = ?VOL_GUESS_MIN,
@@ -36,12 +35,16 @@ implicit_vol(Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike,Option) ->
 	Fa = Func(A),
 	Fb = Func(B),
 
-	case {Fa < 0, Fb > 0} of
-		{true, true} -> % start find volatility
-			secant(1,A,B,Func);
-		{false,false}-> % swap and start 
-			secant(1,B,A,Func);
-		_ -> no_roots
+	if
+		Fa < -?VOL_TOL, Fb > ?VOL_TOL ->
+			secant(1,A,B,Fa,Fb,Func);
+		Fb < -?VOL_TOL, Fa > ?VOL_TOL -> 
+			secant(1,B,A,Fb,Fa,Func);
+		abs(Fa) =< ?VOL_TOL ->
+			A;
+		abs(Fb) =< ?VOL_TOL ->
+			B;
+		true -> no_roots
 	end.
 
 	
@@ -59,21 +62,21 @@ bisect(Iter, A,B, Func) ->
 			C  
 	end.
 
-secant(?MAX_ITER,A,B,Func) -> 
-	Fa = Func(A),
-	Fb = Func(B),
+secant(?MAX_ITER,A,B,Fa,Fb,Func) -> 
+	%Fa = Func(A),
+	%Fb = Func(B),
 	(A*Fb-B*Fa)/(Fb-Fa);
 
-secant(Iter, A,B, Func) ->
-	Fa = Func(A),
-	Fb = Func(B),
+secant(Iter, A,B, Fa,Fb, Func) ->
+	%Fa = Func(A),
+	%Fb = Func(B),
 	C = (A*Fb-B*Fa)/(Fb-Fa),
 	Fc = Func(C),
 	if
 		Fc > ?VOL_TOL ->
-			secant(Iter+1, A, C, Func);
+			secant(Iter+1, A,C, Fa,Fc, Func);
 		Fc < -?VOL_TOL ->
-			secant(Iter+1, C, B, Func);
+			secant(Iter+1, C,B, Fc,Fb, Func);
 		true ->
 			%io:format("Found in ~p iterations~n",[Iter]),
 			C  

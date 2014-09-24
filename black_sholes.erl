@@ -3,7 +3,7 @@
 %
 
 -module(black_sholes).
--export([blash/9,test_bs/1,measuring/1]).
+-export([blash/9,test_bs/1,measuring/1,blash_iv/9]).
 
 -define(INV_SQRTPI, 1/math:sqrt(math:pi())).
 
@@ -22,6 +22,32 @@ measuring(0,N) ->
 measuring(K,N) -> 
     test_bs(0.5),
     measuring(K-1,N).  
+
+
+blash_iv(Vol,_,_,_,_,_,_,_,Strike) when Vol=<0; Strike=<0 -> bad_input;
+blash_iv(Vol,Spot,Cttx,Vttx,Box,Borrow,Yield,CallPut,Strike) ->
+    LogSK = math:log(Spot / Strike),
+    Roll = Box - Borrow,
+    SqrtVttx = math:sqrt(Vttx),
+    St = Vol * SqrtVttx,
+    Bor_div_disc = math:exp((- Borrow - Yield) * Cttx),
+    Box_disc = math:exp( -Box * Cttx),
+
+    D1 = ((LogSK + (Roll - Yield) * Cttx) / St) + (0.5 * St),
+    D2 = D1 - St,
+    case CallPut of
+        option_call ->
+            N1 = gaussian:gaussianCDF(D1),
+            N2 = gaussian:gaussianCDF(D2),
+            Spot * Bor_div_disc * N1 - Strike * Box_disc * N2;
+        option_put ->
+            N1 = gaussian:gaussianCDF(-D1),
+            N2 = gaussian:gaussianCDF(-D2),
+            - Spot * Bor_div_disc * N1 + Strike * Box_disc * N2;
+        _ ->
+            bad_input
+    end.
+
 
 
 blash(Vol,_,_,_,_,_,_,_,Strike) when Vol=<0; Strike=<0 -> bad_input; 

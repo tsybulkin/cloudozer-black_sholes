@@ -29,7 +29,7 @@ gaussianCDF(X) ->
 	ABSx = abs(X),
 	if
 		%ABSx < 0.000000001 -> 0.5; % no need for calc: x=0 gives cdf=0.5
-		ABSx < 0.01 -> 0.5 - ?a1 * X; % alternative implementation
+		ABSx < 0.001 -> 0.5 + ?a1 * X; % alternative implementation
 
 		ABSx =< 1.28 ->
 			Y = X*X/2,
@@ -37,7 +37,7 @@ gaussianCDF(X) ->
             - ?a4 / ( Y + ?a5
             + ?a6 / ( Y + ?a7 ) ) ) );
 
-        ABSx =< 2.7, X<0 ->   %  1.28 < |X| <= 12.7
+        ABSx =< 12.7, X<0 ->   %  1.28 < |X| <= 12.7
         	Y = X*X/2,
         	math:exp ( - Y )
             * ?b0  / ( ABSx - ?b1
@@ -47,7 +47,7 @@ gaussianCDF(X) ->
             - ?b8  / ( ABSx + ?b9
             + ?b10 / ( ABSx + ?b11 ) ) ) ) ) );
 
-        X >0 ->   %  1.28 < |X| <= 12.7
+        ABSx =< 4, X >0 ->   %  1.28 < |X| <= 12.7
         	Y = X*X/2,
         	1 - math:exp ( - Y )
             * ?b0  / ( ABSx - ?b1
