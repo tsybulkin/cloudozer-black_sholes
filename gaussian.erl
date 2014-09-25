@@ -47,7 +47,7 @@ gaussianCDF(X) ->
             - ?b8  / ( ABSx + ?b9
             + ?b10 / ( ABSx + ?b11 ) ) ) ) ) );
 
-        ABSx =< 4, X >0 ->   %  1.28 < |X| <= 12.7
+        ABSx =< 12.7, X >0 ->   %  1.28 < |X| <= 12.7
         	Y = X*X/2,
         	1 - math:exp ( - Y )
             * ?b0  / ( ABSx - ?b1
